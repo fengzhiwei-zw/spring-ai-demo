@@ -1,4 +1,4 @@
-package com.feng.spring_ai_demo;
+package com.feng.springaidemo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
