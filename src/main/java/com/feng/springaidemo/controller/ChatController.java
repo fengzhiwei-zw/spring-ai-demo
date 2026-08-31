@@ -6,7 +6,10 @@ import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +25,6 @@ public class ChatController {
 
     private final ChatClient chatClient;
 
-    // ChatClient.Builder 由 Spring AI 自动装配，注入即用
     public ChatController(ChatClient builder) {
         this.chatClient = builder;
     }
@@ -69,6 +71,9 @@ public class ChatController {
 
     /**
      * 3. 流式调用 - SSE 打字机效果
+     * curl -N --get \
+     *      --data-urlencode "msg=用一句话介绍你自己" \
+     *      http://localhost:8080/chat/stream
      */
     @GetMapping(value = "/stream", produces = "text/event-stream;charset=UTF-8")
     public Flux<String> chatStream(@RequestParam String msg) {
