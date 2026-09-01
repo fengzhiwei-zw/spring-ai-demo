@@ -1,4 +1,4 @@
-package com.feng.springaidemo.controller;
+package com.feng.springailearning.controller;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

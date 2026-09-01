@@ -8,8 +8,10 @@ spring:
       chat:
         options:
           model: qwen3.8-27b
-#  http:
-#    encoding:
-#      enabled: true
-#      charset: UTF-8
-#      force: true
+    chat:
+      memory:
+        redis:
+          host: localhost
+          port: 6379
+
+
