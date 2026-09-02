@@ -24,11 +24,11 @@ public class Stage4Controller {
 
     private final ChatModel chatModel;
 
-    @Autowired
-    private ChatMemory chatMemory;
+    private final ChatMemory chatMemory;
 
-    public Stage4Controller(ChatModel chatModel) {
+    public Stage4Controller(ChatModel chatModel, ChatMemory chatMemory) {
         this.chatModel = chatModel;
+        this.chatMemory = chatMemory;
     }
 
     public record UserProfile(
