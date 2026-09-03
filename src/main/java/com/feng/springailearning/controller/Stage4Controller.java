@@ -9,7 +9,6 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.converter.BeanOutputConverter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -56,12 +55,6 @@ public class Stage4Controller {
                 .build();
         prompt.getInstructions().add(systemMessage);
         ChatResponse chatResponse = chatModel.call(prompt);
-
-        String response = Optional.of(chatResponse)
-                .map(ChatResponse::getResult)
-                .map(Generation::getOutput)
-                .map(AbstractMessage::getText)
-                .orElse("");
 
         if (chatResponse.getResult() != null) {
             chatMemory.add(sessionId, chatResponse.getResult().getOutput());

@@ -1,10 +1,10 @@
 package com.feng.springailearning.config;
 
-import com.feng.springailearning.advisor.LoggingAdvisor;
+import com.feng.springailearning.advisor.ProductionLoggingAdvisor;
 import com.feng.springailearning.advisor.ProductionVectorMemoryAdvisor;
+import com.feng.springailearning.tool.WeatherTool;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import org.springframework.ai.chat.client.advisor.vectorstore.VectorStoreChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.memory.repository.redis.RedisChatMemoryRepository;
@@ -32,7 +32,7 @@ public class ChatClientConfig {
         OpenAiEmbeddingOptions embeddingOptions = OpenAiEmbeddingOptions.builder()
                 .baseUrl("https://dashscope.aliyuncs.com/compatible-mode/v1")
                 .apiKey(System.getenv("DASHSCOPE_API_KEY"))
-                .model("text-embedding-v4")
+                .model("qwen3.7-text-embedding-flash")
                 .dimensions(1024)
                 .build();
         return OpenAiEmbeddingModel.builder()
@@ -148,12 +148,13 @@ public class ChatClientConfig {
                                  ProductionVectorMemoryAdvisor vectorStoreChatMemoryAdvisor) {
         return builder
                 .defaultSystem("你是一位资深Java架构师，回答要专业，有重点，能指出难点和易错点")
+                .defaultTools(new WeatherTool())
                 .defaultOptions(ChatOptions.builder().temperature(0.6))
                 .defaultAdvisors(
                         retrievalAugmentationAdvisor,
                         MessageChatMemoryAdvisor.builder(chatMemory).order(Ordered.HIGHEST_PRECEDENCE + 100).build(),
-                        vectorStoreChatMemoryAdvisor,
-                        new LoggingAdvisor()
+                        // vectorStoreChatMemoryAdvisor,
+                        new ProductionLoggingAdvisor()
                 )
                 .build();
     }

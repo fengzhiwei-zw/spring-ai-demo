@@ -1,6 +1,7 @@
 package com.feng.springailearning.controller;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.metadata.ChatResponseMetadata;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -28,8 +29,9 @@ public class ChatController {
      * 1. 基础同步调用
      */
     @GetMapping("")
-    public String chat(@RequestParam String msg) {
+    public String chat(@RequestParam String msg, @RequestParam(defaultValue = "default-session") String sessionId) {
         return chatClient.prompt()
+                .advisors(advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, sessionId))
                 .user(msg)
                 .call()
                 .content();
@@ -39,8 +41,9 @@ public class ChatController {
      * 2. 同步调用 - 返回详细信息
      */
     @GetMapping("/detail")
-    public Map<String, Object> chatDetail(@RequestParam String msg) {
+    public Map<String, Object> chatDetail(@RequestParam String msg, @RequestParam(defaultValue = "default-session") String sessionId) {
         ChatResponse response = chatClient.prompt()
+                .advisors(advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, sessionId))
                 .user(msg)
                 .call()
                 .chatResponse();
@@ -68,11 +71,12 @@ public class ChatController {
      * 3. 流式调用 - SSE 打字机效果
      * curl -N --get \
      *      --data-urlencode "msg=用一句话介绍你自己" \
-     *      http://localhost:8080/chat/stream
+     *      <a href="http://localhost:8080/chat/stream">...</a>
      */
     @GetMapping(value = "/stream", produces = "text/event-stream;charset=UTF-8")
-    public Flux<String> chatStream(@RequestParam String msg) {
+    public Flux<String> chatStream(@RequestParam String msg, @RequestParam(defaultValue = "default-session") String sessionId) {
         return chatClient.prompt()
+                .advisors(advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, sessionId))
                 .user(msg)
                 .stream()         // 触发流式调用
                 .content();       // 返回 Flux<String>，每个元素是一小段文本
@@ -84,8 +88,9 @@ public class ChatController {
     @GetMapping("/role")
     public String chatWithRole(
             @RequestParam String msg,
-            @RequestParam(defaultValue = "资深Java架构师") String role) {
+            @RequestParam(defaultValue = "资深Java架构师") String role, @RequestParam(defaultValue = "default-session") String sessionId) {
         return chatClient.prompt()
+                .advisors(advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, sessionId))
                 .system(sys -> {
                     sys.text("你是一位{role}，回答要专业且简洁");
                     sys.param("role", role);
@@ -99,8 +104,9 @@ public class ChatController {
      * 5. 带参数调优的调用
      */
     @GetMapping("/chat/creative")
-    public String chatCreative(@RequestParam String msg) {
+    public String chatCreative(@RequestParam String msg, @RequestParam(defaultValue = "default-session") String sessionId) {
         return chatClient.prompt()
+                .advisors(advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, sessionId))
                 .user(msg)
                 .options(OpenAiChatOptions.builder()
                         .temperature(0.9)
