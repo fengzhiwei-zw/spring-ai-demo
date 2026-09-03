@@ -110,7 +110,7 @@ public class ChatClientConfig {
     public VectorStoreChatMemoryAdvisor vectorStoreChatMemoryAdvisor(
             @Qualifier("memoryVectorStore") VectorStore memoryVectorStore) {
         return VectorStoreChatMemoryAdvisor.builder(memoryVectorStore)
-                .defaultTopK(8)                                 // 每次检索相关历史条数
+                .defaultTopK(3)                                 // 每次检索相关历史条数
                 .order(Ordered.HIGHEST_PRECEDENCE + 300)        // 记忆通常放在 RAG 之后
                 .build();
     }
@@ -126,7 +126,7 @@ public class ChatClientConfig {
     public ChatMemory chatMemory(RedisChatMemoryRepository repository) {
         return MessageWindowChatMemory.builder()
                 .chatMemoryRepository(repository)
-                .maxMessages(10)
+                .maxMessages(20)
                 .build();
     }
 
@@ -138,9 +138,9 @@ public class ChatClientConfig {
                 .defaultSystem("你是一位资深Java架构师，回答要专业，有重点，能指出难点和易错点")
                 .defaultAdvisors(
                         retrievalAugmentationAdvisor,
-                        new LoggingAdvisor(),
                         MessageChatMemoryAdvisor.builder(chatMemory).order(Ordered.HIGHEST_PRECEDENCE + 100).build(),
-                        vectorStoreChatMemoryAdvisor
+                        vectorStoreChatMemoryAdvisor,
+                        new LoggingAdvisor()
                 )
                 .build();
     }

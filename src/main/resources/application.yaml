@@ -13,5 +13,7 @@ spring:
         redis:
           host: localhost
           port: 6379
-
-
+    model:
+      embedding: none
+    vectorstore:
+      type: none
