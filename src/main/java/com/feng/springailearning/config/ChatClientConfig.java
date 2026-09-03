@@ -1,6 +1,7 @@
 package com.feng.springailearning.config;
 
 import com.feng.springailearning.advisor.LoggingAdvisor;
+import com.feng.springailearning.advisor.ProductionVectorMemoryAdvisor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.VectorStoreChatMemoryAdvisor;
@@ -113,12 +114,9 @@ public class ChatClientConfig {
      * 基于向量的长期对话记忆
      */
     @Bean
-    public VectorStoreChatMemoryAdvisor vectorStoreChatMemoryAdvisor(
+    public ProductionVectorMemoryAdvisor vectorStoreChatMemoryAdvisor(
             @Qualifier("memoryVectorStore") VectorStore memoryVectorStore) {
-        return VectorStoreChatMemoryAdvisor.builder(memoryVectorStore)
-                .defaultTopK(3)                                 // 每次检索相关历史条数
-                .order(Ordered.HIGHEST_PRECEDENCE + 300)        // 记忆通常放在 RAG 之后
-                .build();
+        return new ProductionVectorMemoryAdvisor(memoryVectorStore);
     }
 
     @Bean
@@ -146,13 +144,15 @@ public class ChatClientConfig {
 
     @Bean
     public ChatClient chatClient(ChatClient.Builder builder, ChatMemory chatMemory,
-                                 RetrievalAugmentationAdvisor retrievalAugmentationAdvisor) {
+                                 RetrievalAugmentationAdvisor retrievalAugmentationAdvisor,
+                                 ProductionVectorMemoryAdvisor vectorStoreChatMemoryAdvisor) {
         return builder
                 .defaultSystem("你是一位资深Java架构师，回答要专业，有重点，能指出难点和易错点")
                 .defaultOptions(ChatOptions.builder().temperature(0.6))
                 .defaultAdvisors(
                         retrievalAugmentationAdvisor,
                         MessageChatMemoryAdvisor.builder(chatMemory).order(Ordered.HIGHEST_PRECEDENCE + 100).build(),
+                        vectorStoreChatMemoryAdvisor,
                         new LoggingAdvisor()
                 )
                 .build();
