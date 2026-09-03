@@ -7,6 +7,7 @@ import org.springframework.ai.chat.client.advisor.vectorstore.VectorStoreChatMem
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.memory.repository.redis.RedisChatMemoryRepository;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chroma.vectorstore.ChromaApi;
 import org.springframework.ai.chroma.vectorstore.ChromaVectorStore;
 import org.springframework.ai.embedding.EmbeddingModel;
@@ -53,7 +54,7 @@ public class ChatClientConfig {
     @Bean
     public VectorStore knowledgeVectorStore(ChromaApi chromaApi, EmbeddingModel embeddingModel) {
         return ChromaVectorStore.builder(chromaApi, embeddingModel)
-                .collectionName("knowledge-base")
+                .collectionName("knowledge-base-text-embedding-v4-1024-v1")
                 .initializeSchema(true)
                 // .databaseName()
                 // .tenantName()
@@ -68,7 +69,7 @@ public class ChatClientConfig {
     @Bean
     public VectorStore memoryVectorStore(ChromaApi chromaApi, EmbeddingModel embeddingModel) {
         return ChromaVectorStore.builder(chromaApi, embeddingModel)
-                .collectionName("chat-memory")
+                .collectionName("chat-memory-text-embedding-v4-1024-v1")
                 .initializeSchema(true)
                 // .databaseName()
                 // .tenantName()
@@ -84,9 +85,14 @@ public class ChatClientConfig {
     public RetrievalAugmentationAdvisor retrievalAugmentationAdvisor(
             @Qualifier("knowledgeVectorStore") VectorStore knowledgeVectorStore,
             ChatClient.Builder chatClientBuilder) {
+        ChatClient.Builder builder = chatClientBuilder.build()
+                .mutate()
+                .defaultOptions(
+                        ChatOptions.builder().temperature(0.0)
+                );
         // 可选：查询改写（强烈推荐，提升召回质量）
         var rewriteTransformer = RewriteQueryTransformer.builder()
-                .chatClientBuilder(chatClientBuilder.build().mutate()) // 改写时温度要低
+                .chatClientBuilder(builder) // 改写时温度要低
                 .build();
 
         var documentRetriever = VectorStoreDocumentRetriever.builder()
@@ -119,6 +125,14 @@ public class ChatClientConfig {
     public RedisChatMemoryRepository redisChatMemoryRepository(RedisClient jedisClient) {
         return RedisChatMemoryRepository.builder()
                 .jedisClient(jedisClient)
+                // .initializeSchema()
+                // .indexName()
+                // .keyPrefix()
+                // .maxConversationIds()
+                // .maxMessagesPerConversation()
+                // .timeToLive()
+                // .ttlSeconds()
+                // .metadataFields()
                 .build();
     }
 
@@ -132,14 +146,13 @@ public class ChatClientConfig {
 
     @Bean
     public ChatClient chatClient(ChatClient.Builder builder, ChatMemory chatMemory,
-                                 RetrievalAugmentationAdvisor retrievalAugmentationAdvisor,
-                                 VectorStoreChatMemoryAdvisor vectorStoreChatMemoryAdvisor) {
+                                 RetrievalAugmentationAdvisor retrievalAugmentationAdvisor) {
         return builder
                 .defaultSystem("你是一位资深Java架构师，回答要专业，有重点，能指出难点和易错点")
+                .defaultOptions(ChatOptions.builder().temperature(0.6))
                 .defaultAdvisors(
                         retrievalAugmentationAdvisor,
                         MessageChatMemoryAdvisor.builder(chatMemory).order(Ordered.HIGHEST_PRECEDENCE + 100).build(),
-                        vectorStoreChatMemoryAdvisor,
                         new LoggingAdvisor()
                 )
                 .build();
